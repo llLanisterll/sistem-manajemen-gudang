@@ -13,11 +13,11 @@ Route::get('/', function () {
 });
 
 // Route Dashboard Umum (Handle redirect dashboard untuk semua role)
-    Route::get('/dashboard', [DashboardController::class, 'index'])
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-    Route::middleware('auth')->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -28,44 +28,41 @@ Route::get('/', function () {
 // 1. Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Manajemen User (Approval Supplier)
+    Route::get('/users', [DashboardController::class, 'usersIndex'])->name('users.index');
+    Route::patch('/users/{id}/approve', [DashboardController::class, 'approveUser'])->name('users.approve');
+
+    // Kategori
     Route::resource('categories', CategoryController::class);
+
+    // Produk & QR Code
     Route::resource('products', ProductController::class);
-
-    // EXPORT ROUTE (Letakkan ini sebelum resource lain agar aman)
-    Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
-
-    Route::resource('products', ProductController::class);
-
-    // Route khusus Print QR
     Route::get('/products/{id}/print-barcode', [ProductController::class, 'printBarcode'])->name('products.printBarcode');
+
+    // Export Laporan Transaksi
+    Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
 });
 
 // 2. Manager Routes
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // 1. Export DULUAN (Wajib di atas 'show')
+    // Transaksi Gudang
+    // PENTING: Route Export harus ditaruh SEBELUM route show/{id} agar tidak error 404
     Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
-
-    // 2. Baru kemudian Index dan Detail (Show)
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show'); // <--- Ini menangkap {id}, jadi harus di bawah export
-
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::patch('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
 
-    // Route Restock
+    // Restock Order & Rating
     Route::resource('restock', RestockOrderController::class);
     Route::patch('/restock/{restockOrder}/status', [RestockOrderController::class, 'updateStatus'])->name('restock.updateStatus');
-
-    Route::resource('restock', RestockOrderController::class);
-    Route::patch('/restock/{restockOrder}/status', [RestockOrderController::class, 'updateStatus'])->name('restock.updateStatus');
-
-    // Route Rating Supplier (BARU)
     Route::post('/restock/{id}/rate', [RestockOrderController::class, 'rate'])->name('restock.rate');
 });
 
 // 3. Staff Routes
-    Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
+Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Staff bisa buat & lihat transaksi
@@ -73,7 +70,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
 });
 
 // 4. Supplier Routes
-    Route::middleware(['auth', 'role:supplier'])->prefix('supplier')->name('supplier.')->group(function () {
+Route::middleware(['auth', 'role:supplier'])->prefix('supplier')->name('supplier.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Supplier restock routes

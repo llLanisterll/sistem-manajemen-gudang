@@ -41,6 +41,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // Cek kredensial dulu
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -48,6 +49,17 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
+
+        // --- TAMBAHAN: CEK STATUS AKTIF ---
+        $user = Auth::user();
+        if ($user->role === 'supplier' && !$user->is_active) {
+            Auth::logout(); // Tendang keluar
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda sedang menunggu persetujuan Admin.',
+            ]);
+        }
+        // ----------------------------------
 
         RateLimiter::clear($this->throttleKey());
     }

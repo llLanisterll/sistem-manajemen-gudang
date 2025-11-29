@@ -39,6 +39,8 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'supplier', // PAKSA JADI SUPPLIER
+            'is_active' => false, // PAKSA NON-AKTIF (Butuh Approval)
         ]);
 
         event(new Registered($user));

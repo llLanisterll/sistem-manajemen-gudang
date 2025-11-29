@@ -57,4 +57,18 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('role', 'data'));
     }
+    // List User (Khusus Admin)
+    public function usersIndex()
+    {
+        // Ambil supplier yang belum aktif
+        $pendingSuppliers = User::where('role', 'supplier')->where('is_active', false)->get();
+        return view('admin.users.index', compact('pendingSuppliers'));
+    }
+
+    // Action Approve
+    public function approveUser($id)
+    {
+        User::where('id', $id)->update(['is_active' => true]);
+        return back()->with('success', 'Supplier berhasil disetujui!');
+    }
 }
