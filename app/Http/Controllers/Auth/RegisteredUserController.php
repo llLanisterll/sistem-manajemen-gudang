@@ -22,29 +22,43 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
-    /**
+   /**
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+   public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'string', 'in:manager,staff,supplier'],
         ]);
+
+        // LOGIKA BARU:
+        // Jika Supplier -> Wajib Approval (False)
+        // Jika Staff/Manager -> Langsung Aktif (True)
+        $isActive = $request->role === 'supplier' ? false : true;
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'supplier', // PAKSA JADI SUPPLIER
-            'is_active' => false, // PAKSA NON-AKTIF (Butuh Approval)
+            'role' => $request->role,
+            'is_active' => $isActive, // Simpan status
         ]);
 
         event(new Registered($user));
 
+        // JIKA SUPPLIER (BELUM AKTIF), JANGAN LOGIN OTOMATIS
+        if (!$isActive) {
+            // Redirect ke halaman login dengan pesan sukses tapi harus tunggu
+            return redirect()->route('login')
+                ->with('status', 'Registrasi berhasil! Akun Supplier Anda menunggu persetujuan Admin sebelum bisa login.');
+        }
+
+        // Jika bukan supplier, login seperti biasa
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));

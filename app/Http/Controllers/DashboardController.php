@@ -71,4 +71,33 @@ class DashboardController extends Controller
         User::where('id', $id)->update(['is_active' => true]);
         return back()->with('success', 'Supplier berhasil disetujui!');
     }
+
+    // Tampilkan daftar supplier pending
+public function pendingSuppliers()
+{
+    $pendingSuppliers = User::where('role', 'supplier')
+                            ->where('is_active', false)
+                            ->latest()
+                            ->get();
+
+    return view('admin.users.pending', compact('pendingSuppliers'));
+}
+
+// Setujui Supplier
+public function approveSupplier($id)
+{
+    $user = User::findOrFail($id);
+    $user->update(['is_active' => true]);
+
+    return back()->with('success', 'Supplier ' . $user->name . ' berhasil disetujui dan sekarang bisa login.');
+}
+
+// Tolak Supplier (Hapus Akun)
+public function rejectSupplier($id)
+{
+    $user = User::findOrFail($id);
+    $user->delete();
+
+    return back()->with('success', 'Permintaan supplier ditolak dan dihapus.');
+}
 }

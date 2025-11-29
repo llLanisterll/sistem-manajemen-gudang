@@ -6,10 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+public function up(): void
 {
     Schema::table('users', function (Blueprint $table) {
-        $table->boolean('is_active')->default(true); // Default true agar Admin/Staff seeder aman
+        // Default true (aktif) agar Admin/Staff lama tidak terblokir
+        $table->boolean('is_active')->default(true)->after('role');
     });
 }
 

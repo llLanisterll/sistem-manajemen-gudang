@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route Dashboard Umum (Handle redirect dashboard untuk semua role)
+// Route Dashboard Umum (Redirect sesuai role)
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -27,11 +27,13 @@ Route::middleware('auth')->group(function () {
 
 // 1. Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Manajemen User (Approval Supplier)
-    Route::get('/users', [DashboardController::class, 'usersIndex'])->name('users.index');
-    Route::patch('/users/{id}/approve', [DashboardController::class, 'approveUser'])->name('users.approve');
+    Route::get('/users/pending', [DashboardController::class, 'pendingSuppliers'])->name('users.pending');
+    Route::patch('/users/{id}/approve', [DashboardController::class, 'approveSupplier'])->name('users.approve');
+    Route::delete('/users/{id}/reject', [DashboardController::class, 'rejectSupplier'])->name('users.reject');
 
     // Kategori
     Route::resource('categories', CategoryController::class);
@@ -48,8 +50,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Transaksi Gudang
-    // PENTING: Route Export harus ditaruh SEBELUM route show/{id} agar tidak error 404
+    // Transaksi Gudang (PENTING: Route Export ditaruh SEBELUM route show/{id})
     Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
