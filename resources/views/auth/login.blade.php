@@ -59,7 +59,7 @@
 
             <div class="text-center text-sm text-slate-500">
                 Belum punya akun?
-                <a href="{{ route('register') }}" class="font-bold text-blue-600 hover:text-blue-800">Daftar Supplier</a>
+                <a href="{{ route('register') }}" class="font-bold text-blue-600 hover:text-blue-800">Daftar</a>
             </div>
         </div>
     </form>
